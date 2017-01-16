@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>Home</title>
+    </head>
+<body>
+{{#user}}
+<span>Hello {{name}}, your email address is: {{email}}.</span>
+{{/user}}
+</body>
+</html>
+
+
+</head>
+<body>
+<ul>
+    {{#home}}
+    <li>{{name}}</li>
+    <li>{{quantity}}</li>
+    <li>{{price}}</li>
+    {{/home}}
+
+</ul>
+<h2>Place your order.</h2>
+<form method="post" action="/">
+
+    Name:
+    <input type="text" placeholder="Enter the item." name="username"/>
+
+    Quantity:
+    <input type="text" placeholder="How many would you like to buy?" name="email"/>
+
+    Price:
+    <input type="text" placeholder="Price per item." name="email"/>
+
+    <input type="submit"/>
+
+</form>
+
+<!--<br>-->
+<!--<h1>Delete a restaurant</h1>-->
+<!--<form method="post" action="/delete-restaurant" >-->
+    <!--ID:-->
+    <!--<input type="text" name="id"/>-->
+
+    <!--<input type="submit"/>-->
+<!--</form>-->
+</body>
+</html>
