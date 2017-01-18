@@ -13,42 +13,73 @@ import java.util.List;
 
 
 public class Main {
-    private static Connection getConnection() throws SQLException{
+    public static Connection getConnection() throws SQLException{
         return DriverManager.getConnection("jdbc:h2:./main");
     }
 
-    private static void initializeDatabase() throws SQLException {
+    public static void initializeDatabase() throws SQLException {
         Statement stmt = getConnection().createStatement();
-        stmt.execute("CREATE TABLE IF NOT EXISTS users (id IDENTITY, name VARCHAR, email VARCHAR)");
-        stmt.execute("CREATE TABLE IF NOT EXISTS orders (id IDENTITY, user_id INTEGER)");
+        stmt.execute("CREATE TABLE IF NOT EXISTS users (id IDENTITY, username VARCHAR, email VARCHAR)");
+        stmt.execute("CREATE TABLE IF NOT EXISTS orders (id IDENTITY, user_id INTEGER, open BOOLEAN)");
         stmt.execute("CREATE TABLE IF NOT EXISTS items (id IDENTITY, name VARCHAR, quantity INTEGER, price DOUBLE, order_id INTEGER)");
     }
-    public static void createOrder(Item i) throws SQLException {
-        PreparedStatement stmt = getConnection().prepareStatement("INSERT INTO  VALUES (NULL, ?, ?, ?)");
-        stmt.setString(1, i.getName());
-        stmt.setInt(2, i.getQuantity());
-        stmt.setDouble(3, i.getPrice());
+
+    public static void insertItem(Item item) throws SQLException {
+        PreparedStatement stmt = getConnection().prepareStatement("INSERT INTO items VALUES (null, ?, ?, ?, ?)");
+        stmt.setString(1, item.getName());
+        stmt.setInt(2, item.getQuantity());
+        stmt.setDouble(3, item.getPrice());
+        stmt.setInt(4, item.getOrderId()); //this is probably wrong
         stmt.execute();
+
     }
-//      figure this method out somehow he had list not arraylist as an example
 
-//    private static List<Order> getOrdersForUser(Integer userId) throw SQLException {
-//        PreparedStatement stmt = getConnection().prepareStatement("SELECT * FROM orders WHERE user_id = ?");
-//        return new ArrayList<>();
-//    }
+    //allows user to create an order
+    public static int createNewOrder(Integer i) throws SQLException {
+        PreparedStatement stmt = getConnection().prepareStatement("INSERT INTO orders VALUES (NULL, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+        stmt.setInt(1, i);
+        stmt.setBoolean(2, false);
+        stmt.executeUpdate();
 
+        ResultSet keys = stmt.getGeneratedKeys();
+        keys.next();
 
-    private static List<Order> getOrdersForUser(Integer userId) throws SQLException {
-        ArrayList<Order> orders = new ArrayList<>();
+        return keys.getInt(1);
+    }
+
+    public static Order getLatestCurrentOrder(Integer userId) throws SQLException {
+        Order order = null;
+
+        if (userId != null) {
+
+            PreparedStatement stmt = getConnection().prepareStatement("SELECT TOP 1 * FROM orders WHERE user_id = ? AND open = true");
+
+            stmt.setInt(1, userId);
+            ResultSet results = stmt.executeQuery();
+
+            if (results.next()) {
+                order = new Order(results.getInt("id"), userId, true);
+                //order = new Order(results.getInt("id"), results.getInt("user_id"), false);
+            }
+        }
+
+        return order;
+    }
+
+    public static List<Order> getOrdersForUser(Integer userId) throws SQLException {
+        ArrayList order = null;
         PreparedStatement stmt = getConnection().prepareStatement("SELECT * FROM orders WHERE user_id = ?");
 
         stmt.setInt(1, userId);
-        stmt.execute();
+        ResultSet results = stmt.executeQuery();
 
-    return new ArrayList<>();
+        if (results.next()){
+            order = new ArrayList<Order>(results.getInt("user_id"));
+        }
+        return order;
     }
 
-    private static User getUserById(Integer id) throws SQLException {
+    public static User getUserById(Integer id) throws SQLException {
         User user = null;
 
         if (id != null) {
@@ -58,7 +89,7 @@ public class Main {
             ResultSet results = stmt.executeQuery();
 
             if (results.next()) {
-                user = new User(id, results.getString("name"), results.getString("email"));
+                user = new User(id, results.getString("username"), results.getString("email"));
 
                 user.setOrders(getOrdersForUser(id));
             }
@@ -67,11 +98,11 @@ public class Main {
         return user;
     }
 
-    private static Integer getUserIdByEmail(String email) throws SQLException {
+    public static Integer getUserIdByEmail(String email) throws SQLException {
         Integer userId = null;
 
         if (email != null) {
-            PreparedStatement stmt = getConnection().prepareStatement("SELECT * FROM users Where email = ?");
+            PreparedStatement stmt = getConnection().prepareStatement("SELECT * FROM users WHERE email = ?");
             stmt.setString(1, email);
 
             ResultSet results = stmt.executeQuery();
@@ -86,21 +117,47 @@ public class Main {
 
     public static void main(String[] args) throws SQLException {
         Server.createWebServer().start();
+        initializeDatabase();
 
-        Spark.get("/", (request, response) -> {
-            HashMap model = new HashMap();
+        Spark.post("/order", (request, response) -> {
             Session session = request.session();
 
-            User current = getUserById(session.attribute("fancy_user_id"));
+            User current = getUserById(session.attribute("user_id"));
+
+            if (current != null) {
+                //see if there is a current order
+                Order currentOrder = getLatestCurrentOrder(current.getId());
+
+                if (currentOrder == null) {
+                    //if not make a new one
+                    int orderId = createNewOrder(current.getId());
+
+                    //get item from post data
+                    Item postedItem = new Item(request.queryParams("name"), Integer.valueOf(request.queryParams("quantity")), Double.valueOf(request.queryParams("price")), orderId);
+
+                    //add item to order
+                    insertItem(postedItem);
+                }
+            }
+
+            //redirect
+            response.redirect("/");
+            return "";
+        });
+
+        Spark.get("/", (request, response) -> {
+            HashMap m = new HashMap();
+            Session session = request.session();
+
+            User current = getUserById(session.attribute("user_id"));
 
             if (current != null) {
                 // pass user into model
-                model.put("user", current);
+                m.put("user", current);
 
-
-                return new ModelAndView(model, "home.html");
+                return new ModelAndView(m, "home.html");
             } else {
-                return new ModelAndView(model, "login.html");
+                return new ModelAndView(m, "login.html");
             }
         }, new MustacheTemplateEngine());
 
@@ -108,20 +165,19 @@ public class Main {
 
             String email = request.queryParams("email");
 
-            // look up the user by email address
+            // looks up the user by email address
             Integer userId = getUserIdByEmail(email);
 
-            // if the user exists, save the id in session.
+            // if the user exists, saves the id in session.
             if (userId != null) {
                 Session session = request.session();
-                session.attribute("fancy_user_id", userId);
+                session.attribute("user_id", userId);
             }
             response.redirect("/");
             return "";
         });
 
 
-        initializeDatabase();
     }
 }
 

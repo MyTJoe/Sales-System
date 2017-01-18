@@ -6,7 +6,8 @@
     </head>
 <body>
 {{#user}}
-<span>Hello {{name}}, your email address is: {{email}}.</span>
+<span>Hello {{name}}, please place your order.</span>
+<!--your email address is: {{email}}.</span>-->
 {{/user}}
 </body>
 </html>
@@ -22,17 +23,17 @@
     {{/home}}
 
 </ul>
-<h2>Place your order.</h2>
-<form method="post" action="/">
+<!--<h2>Welcome, place your order please.</h2>-->
+<form method="post" action="/order">
 
     Name:
-    <input type="text" placeholder="Enter the item." name="username"/>
+    <input type="text" placeholder="What you want?" name="name"/>
 
     Quantity:
-    <input type="text" placeholder="How many would you like to buy?" name="email"/>
+    <input type="text" placeholder="How many you want?" name="quantity"/>
 
     Price:
-    <input type="text" placeholder="Price per item." name="email"/>
+    <input type="text" placeholder="What you paying?" name="price"/>
 
     <input type="submit"/>
 

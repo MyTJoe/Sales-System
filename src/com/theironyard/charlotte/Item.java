@@ -1,14 +1,11 @@
 package com.theironyard.charlotte;
 
-import java.sql.*;
-import java.util.ArrayList;
-
 public class Item {
-    Integer id;
-    String name;
-    Integer quantity;
-    double price;
-    Integer orderId;
+    private Integer id;
+    private String name;
+    private Integer quantity;
+    private double price;
+    private Integer orderId;
 
     public Item() {}
 
@@ -67,27 +64,20 @@ public class Item {
         this.orderId = orderId;
     }
 
-    public static void insertItem(Connection conn, Item item) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("INSERT INTO items VALUES (null, ?, ?, ?, ?)");
-        stmt.setString(1, item.getName());
-        stmt.setInt(2, item.getQuantity());
-        stmt.setDouble(3, item.getPrice());
-        stmt.setInt(4, item.getOrderId());
-        stmt.execute();
-    }
 
-    public static ArrayList<Item> createItem(Connection conn) throws SQLException {
-        ArrayList<Item> item = new ArrayList<>();
-        Statement stmt = conn.createStatement();
-        ResultSet results = stmt.executeQuery("SELECT * FROM items");
-        while (results.next()) {
-            Integer id = results.getInt("id");
-            String name = results.getString("name");
-            Integer quantity = results.getInt("quantity");
-            double price = results.getDouble("price");
-            Integer orderId = results.getInt("order_id");
-            item.add(new Item(id, name, quantity, price, orderId));
-        }
-        return item;
-    }
+//
+//    public static ArrayList<Item> createItem(Connection conn) throws SQLException {
+//        ArrayList<Item> item = new ArrayList<>();
+//        Statement stmt = conn.createStatement();
+//        ResultSet results = stmt.executeQuery("SELECT * FROM items");
+//        while (results.next()) {
+//            Integer id = results.getInt("id");
+//            String name = results.getString("name");
+//            Integer quantity = results.getInt("quantity");
+//            double price = results.getDouble("price");
+//            Integer orderId = results.getInt("order_id");
+//            item.add(new Item(id, name, quantity, price, orderId));
+//        }
+//        return item;
+//    }
 }

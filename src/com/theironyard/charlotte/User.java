@@ -1,17 +1,13 @@
 package com.theironyard.charlotte;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 
 
 public class User {
-    // List or Arraylist orders;
 
     private Integer id;
     private String name;
     private String email;
-
     private List<Order> orders;
 
     public User() {
@@ -60,27 +56,9 @@ public class User {
         this.email = email;
     }
 
-        //id in user table prob matches user_id in orders
-    public static void insertUser(Connection conn, User user) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("INSERT INTO users VALUES (NULL, ?, ?)");
-        stmt.setString(1, user.getName());
-        stmt.setString(2, user.getEmail());
-        stmt.execute();
-    }
-
-    public static ArrayList<User> createUsers(Connection conn) throws SQLException {
-        ArrayList<User> user = new ArrayList<>();
-        Statement stmt = conn.createStatement();
-        ResultSet results = stmt.executeQuery("SELECT * FROM users");
-        while (results.next()) {
-            Integer id = results.getInt("id");
-            String username = results.getString("username");
-            String email = results.getString("email");
-            user.add(new User(id, username, email));
-        }
-        return user;
-    }
 }
+        //id in user table prob matches user_id in orders
+
 //    public static User getUserByEmail(Connection conn, String email) throws SQLException {
 //       User Email;
 //       PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE email = ?");
@@ -96,7 +74,8 @@ public class User {
 //       }
 //
 //       return Email;
-//
+//}
+
 //  orders belong to users and items belong to orders
 // }
 

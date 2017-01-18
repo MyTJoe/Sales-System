@@ -5,13 +5,20 @@ import java.util.List;
 public class Order {
     private Integer id;
     private Integer userId;
+    private boolean open;
     private List<Item> items;
 
     public Order() {}
 
-    public Order(Integer id, Integer userId) {
+    public Order(Integer id, Integer userId, boolean open) {
         this.id = id;
         this.userId = userId;
+        this.open = open;
+    }
+
+    public Order(Integer userId, boolean open) {
+        this.userId = userId;
+        this.open = open;
     }
 
     public List<Item> getItems() {
