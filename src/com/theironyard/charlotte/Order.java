@@ -1,12 +1,6 @@
 package com.theironyard.charlotte;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-
-import static com.theironyard.charlotte.Main.getConnection;
 
 public class Order {
     private Integer id;

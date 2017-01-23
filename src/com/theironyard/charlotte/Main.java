@@ -1,30 +1,29 @@
 package com.theironyard.charlotte;
 
 import org.h2.tools.Server;
-import spark.ModelAndView;
-import spark.Session;
-import spark.Spark;
+import spark.*;
 import spark.template.mustache.MustacheTemplateEngine;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class Main {
-    public static Connection getConnection() throws SQLException{
+    private static Connection getConnection() throws SQLException{
         return DriverManager.getConnection("jdbc:h2:./main");
     }
 
-    public static void initializeDatabase() throws SQLException {
+    private  static void initializeDatabase() throws SQLException {
         Statement stmt = getConnection().createStatement();
         stmt.execute("CREATE TABLE IF NOT EXISTS users (id IDENTITY, username VARCHAR, email VARCHAR)");
         stmt.execute("CREATE TABLE IF NOT EXISTS orders (id IDENTITY, user_id INTEGER, open BOOLEAN)");
         stmt.execute("CREATE TABLE IF NOT EXISTS items (id IDENTITY, name VARCHAR, quantity INTEGER, price DOUBLE, order_id INTEGER)");
     }
 
-    public static void insertItem(Order order, Item item) throws SQLException {
+    private static void insertItem(Order order, Item item) throws SQLException {
         //insert into items these values
         PreparedStatement stmt = getConnection().prepareStatement("INSERT INTO items VALUES (null, ?, ?, ?, ?)");
         stmt.setString(1, item.getName());
@@ -32,11 +31,10 @@ public class Main {
         stmt.setDouble(3, item.getPrice());
         stmt.setInt(4, order.getId());
         stmt.executeUpdate();
-
-        // stmt.setInt(4, item.getOrderId()); //this is wrong and what was tripping me up for a day
+        // stmt.setInt(4, item.getOrderId()); //this is wrong and what was tripping me up
     }
 
-    public static List<Item> getOrderItems(Order order) throws SQLException {
+    private static List<Item> getOrderItems(Order order) throws SQLException {
         List<Item> orderList = null;
 
         if (order != null) {
@@ -62,7 +60,7 @@ public class Main {
     }
 
     //allows user to create an order
-    public static void createNewOrder(Order order) throws SQLException {
+    private static void createNewOrder(Order order) throws SQLException {
         PreparedStatement stmt = getConnection().prepareStatement("INSERT INTO orders VALUES (NULL, ?, ?)", Statement.RETURN_GENERATED_KEYS);
         stmt.setInt(1, order.getUserId());
         stmt.setBoolean(2, order.isOpen());
@@ -74,7 +72,16 @@ public class Main {
         }
     }
 
-    public static Order getLatestCurrentOrder(User user) throws SQLException {
+    private static void updateOrder(Order order) throws SQLException {
+        PreparedStatement stmt = getConnection().prepareStatement("UPDATE orders SET user_id = ?, open = ? WHERE id = ?");
+
+        stmt.setInt(1, order.getUserId());
+        stmt.setBoolean(2, order.isOpen());
+        stmt.setInt(3, order.getId());
+        stmt.execute();
+    }
+
+    private static Order getLatestCurrentOrder(User user) throws SQLException {
         Order order = null;
 
         PreparedStatement stmt = getConnection().prepareStatement("SELECT TOP 1 * FROM orders WHERE user_id = ? AND open = true");
@@ -89,7 +96,7 @@ public class Main {
         return order;
     }
 
-    public static List<Order> getOrdersForUser(Integer userId) throws SQLException {
+    private static List<Order> getOrdersForUser(Integer userId) throws SQLException {
         ArrayList order = null;
         PreparedStatement stmt = getConnection().prepareStatement("SELECT * FROM orders WHERE user_id = ?");
 
@@ -102,7 +109,7 @@ public class Main {
         return order;
     }
 
-    public static User getUserById(Integer id) throws SQLException {
+    private static User getUserById(Integer id) throws SQLException {
         User user = null;
 
         if (id != null) {
@@ -121,7 +128,7 @@ public class Main {
         return user;
     }
 
-    public static User getUserByEmail(String email) throws SQLException {
+    private static User getUserByEmail(String email) throws SQLException {
         User user = null;
 
             PreparedStatement stmt = getConnection().prepareStatement("SELECT * FROM users WHERE email = ?");
@@ -130,13 +137,10 @@ public class Main {
             ResultSet results = stmt.executeQuery();
 
             if(results.next()) {
-                user = new User(results.getInt("id"), results.getString("name"), results.getString("email"));
+                user = new User(results.getInt("id"), results.getString("username"), results.getString("email"));
             }
         return  user;
     }
-
-
-
 
     public static void main(String[] args) throws SQLException {
         Server.createWebServer().start();
@@ -166,17 +170,29 @@ public class Main {
             response.redirect("/");
             return "";
         });
-
-        Spark.post("/checkout", (request, response) -> {
+        //Ben, used your example to do the checkout here and for the HTML
+        Spark.post("/checkout", (Request request, Response response) -> {
             HashMap m = new HashMap();
             Session session = request.session();
+            User current = getUserById(session.attribute("user_id"));
 
+            if (current != null) {
+                Order currentOrder = getLatestCurrentOrder(current);
+                List<Item> items = getOrderItems(currentOrder);
+                double subTotal =
+                        items.stream().collect(Collectors.summingDouble(i -> i.getQuantity() * i.getPrice()));
 
+                m.put("user", current);
+                m.put("items", items);
+                m.put("subtotal", subTotal);
 
+                currentOrder.setOpen(false);
+                updateOrder(currentOrder);
+            }
 
+            return new ModelAndView(m, "checkout.html");
 
-            return new MustacheTemplateEngine();
-        });
+        }, new MustacheTemplateEngine());
 
         Spark.get("/", (request, response) -> {
             HashMap m = new HashMap();
@@ -195,18 +211,17 @@ public class Main {
 
             return new ModelAndView(m, "home.html");
 
-        }, new MustacheTemplateEngine();
+        }, new MustacheTemplateEngine());
 
         Spark.get("/login", (request, response) -> {
             return new ModelAndView(new HashMap(), "login.html");
 
         }, new MustacheTemplateEngine());
 
-
         Spark.post("/login", (request, response) -> {
             Session session = request.session();
 
-           User current = getUserByEmail(request.queryParams("email"));
+            User current = getUserByEmail(request.queryParams("email"));
 
             if (current != null) {
                 session.attribute("user_id", current.getId());
@@ -215,9 +230,5 @@ public class Main {
             response.redirect("/");
             return "";
         });
-
-
     }
 }
-
-//            Spark.externalStaticFileLocation("public");

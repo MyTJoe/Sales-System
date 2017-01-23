@@ -69,20 +69,4 @@ public class Item {
         this.orderId = orderId;
     }
 
-
-//
-//    public static ArrayList<Item> createItem(Connection conn) throws SQLException {
-//        ArrayList<Item> item = new ArrayList<>();
-//        Statement stmt = conn.createStatement();
-//        ResultSet results = stmt.executeQuery("SELECT * FROM items");
-//        while (results.next()) {
-//            Integer id = results.getInt("id");
-//            String name = results.getString("name");
-//            Integer quantity = results.getInt("quantity");
-//            double price = results.getDouble("price");
-//            Integer orderId = results.getInt("order_id");
-//            item.add(new Item(id, name, quantity, price, orderId));
-//        }
-//        return item;
-//    }
 }

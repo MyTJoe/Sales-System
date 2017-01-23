@@ -1,0 +1,49 @@
+<html>
+<head>
+
+    <title>Check Out</title>
+</head>
+<body>
+<!-- Display the Current User Details -->
+{{#user}}
+<!--Definition and Usage. The <div> tag defines a division or a section in an HTML document.
+The <div> tag is used to group block-elements to format them with CSS.-->
+<div>
+    <span>User: {{name}} ({{email}})</span>
+</div>
+{{/user}}
+
+
+<!-- List out the items. -->
+<!--unordered list-->
+<ul>
+    {{#items}}
+    <!--list item-->
+    <li>
+        <!--The <dd> tag is used to describe a term/name in a description list. -->
+        <!--The <dd> tag is used in conjunction with <dl> (defines a description list) and -->
+        <!--<dt> (defines terms/names). Inside a <dd> tag you can put paragraphs,
+            line breaks, images, links, lists, etc.-->
+        <dl>
+            <dt>Name</dt>
+            <dd>{{name}}</dd>
+
+            <dt>Quantity</dt>
+            <dd>{{quantity}}</dd>
+
+            <dt>Price</dt>
+            <dd>{{price}}</dd>
+        </dl>
+    </li>
+    {{/items}}
+</ul>
+
+
+<!-- Display a subtotal. -->
+<span>Your Total Today: {{subtotal}}</span>
+
+<span>Your order has been submitted.</span>
+<!--hypertext reference-->
+<a href="/">Go back to the Homepage.</a>
+</body>
+</html>

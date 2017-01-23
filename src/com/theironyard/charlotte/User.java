@@ -55,27 +55,6 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-
 }
-        //id in user table prob matches user_id in orders
 
-//    public static User getUserByEmail(Connection conn, String email) throws SQLException {
-//       User Email;
-//       PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE email = ?");
-//       stmt.setString(1, email);
-//       stmt.execute();
-//       ResultSet results = stmt.executeQuery();
-//
-//       if (results.next()) {
-//           //Integer id = results.getInt("id");
-//           String name = results.getString("username");
-//           //String email = results.getString("email");
-//           Email = new User(name, email);
-//       }
-//
-//       return Email;
-//}
-
-//  orders belong to users and items belong to orders
-// }
 
