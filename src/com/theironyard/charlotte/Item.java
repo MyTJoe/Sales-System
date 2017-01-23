@@ -9,6 +9,12 @@ public class Item {
 
     public Item() {}
 
+    public Item(String name, Integer quantity, double price) {
+        this.name = name;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
     public Item(String name, Integer quantity, double price, Integer orderId) {
         this.name = name;
         this.quantity = quantity;
@@ -16,12 +22,11 @@ public class Item {
         this.orderId = orderId;
     }
 
-    public Item(Integer id, String name, Integer quantity, double price, Integer orderId) {
+    public Item(Integer id, String name, Integer quantity, double price) {
         this.id = id;
         this.name = name;
         this.quantity = quantity;
         this.price = price;
-        this.orderId = orderId;
     }
 
     public Integer getId() {
